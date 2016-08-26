@@ -2,7 +2,6 @@ package dodosim
 
 import (
 	"fmt"
-	"github.com/peternoyes/dodo-sim"
 	"io/ioutil"
 	"testing"
 )
