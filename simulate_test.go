@@ -25,7 +25,7 @@ func (ram *Ramtest) Write(addr uint16, val uint8) {
 }
 
 func TestSimulator(t *testing.T) {
-	bus := new(dodosim.Bus)
+	bus := new(Bus)
 	bus.New()
 
 	ram := new(Ramtest)
@@ -40,20 +40,20 @@ func TestSimulator(t *testing.T) {
 		ram[i] = b
 	}
 
-	cpu := new(dodosim.Cpu)
+	cpu := new(Cpu)
 	cpu.Reset(bus)
 
 	cpu.PC = 0x400
 
-	dodosim.BuildTable()
+	BuildTable()
 
 	for {
 		before := cpu.PC
 		opcode := bus.Read(cpu.PC)
 
 		cpu.PC++
-		cpu.Status |= dodosim.Constant
-		o := dodosim.GetOperation(opcode)
+		cpu.Status |= Constant
+		o := GetOperation(opcode)
 		o.Execute(cpu, bus, opcode)
 
 		//fmt.Println(opcode)
