@@ -1,8 +1,6 @@
 package dodosim
 
 import (
-	"fmt"
-	"io/ioutil"
 	"strings"
 	"time"
 )
@@ -16,7 +14,7 @@ type Simulator struct {
 	CyclesPerFrame   func(cycles uint64)
 }
 
-func Simulate(s *Simulator) {
+func Simulate(s *Simulator, firmware, game []byte) {
 	bus := new(Bus)
 	bus.New()
 
@@ -24,11 +22,6 @@ func Simulate(s *Simulator) {
 	bus.Add(ram)
 
 	rom := new(Rom)
-	dat, err := ioutil.ReadFile("firmware")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 
 	ssd1305 := new(Ssd1305)
 	ssd1305.New(ram, s.Renderer)
@@ -39,7 +32,7 @@ func Simulate(s *Simulator) {
 	gamepad.New()
 
 	fram := new(Fram)
-	fram.New()
+	fram.New(game)
 
 	via := new(Via)
 	via.New(gamepad, fram)
@@ -48,7 +41,7 @@ func Simulate(s *Simulator) {
 	acia := new(Acia)
 	bus.Add(acia)
 
-	for i, b := range dat {
+	for i, b := range firmware {
 		rom[i] = b
 	}
 	bus.Add(rom)

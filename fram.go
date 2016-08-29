@@ -3,7 +3,6 @@ package dodosim
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 )
 
 const (
@@ -48,7 +47,7 @@ type Fram struct {
 	WriteEnable  bool
 }
 
-func (f *Fram) New() {
+func (f *Fram) New(fram []byte) {
 	f.Clock = false
 	f.Off = true
 	f.WaitingMosi = false
@@ -61,15 +60,8 @@ func (f *Fram) New() {
 	f.State = None
 	f.WriteEnable = false
 
-	if _, err := os.Stat("fram.bin"); !os.IsNotExist(err) {
-		b, err := ioutil.ReadFile("fram.bin")
-		if err != nil {
-			panic(err)
-		}
-
-		for i, v := range b {
-			f.Data[i] = v
-		}
+	for i, v := range fram {
+		f.Data[i] = v
 	}
 }
 
