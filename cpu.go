@@ -179,20 +179,20 @@ func (cpu *Cpu) Irq(space Space) {
 	cpu.PC = uint16(space.Read(0xFFFE)) | (uint16(space.Read(0xFFFF)) << 8)
 }
 
-func (r Resolve) Push16(val uint16) {
+func (r *Resolve) Push16(val uint16) {
 	cpu := r.Cpu
 	r.Space.Write(0x100+uint16(cpu.SP), uint8((val>>8)&0x00FF))
 	r.Space.Write(0x100+((uint16(cpu.SP)-1)&0x00FF), uint8(val&0x00FF))
 	cpu.SP -= 2
 }
 
-func (r Resolve) Push8(val uint8) {
+func (r *Resolve) Push8(val uint8) {
 	cpu := r.Cpu
 	r.Space.Write(0x100+uint16(cpu.SP), val)
 	cpu.SP -= 1
 }
 
-func (r Resolve) Pull16() uint16 {
+func (r *Resolve) Pull16() uint16 {
 	cpu := r.Cpu
 	var t uint16
 	t = uint16(r.Space.Read(0x100+((uint16(cpu.SP)+1)&0x00FF))) | (uint16(r.Space.Read(0x100+((uint16(cpu.SP)+2)&0x00FF))) << 8)
@@ -200,13 +200,13 @@ func (r Resolve) Pull16() uint16 {
 	return t
 }
 
-func (r Resolve) Pull8() uint8 {
+func (r *Resolve) Pull8() uint8 {
 	cpu := r.Cpu
 	cpu.SP += 1
 	return r.Space.Read(0x100 + uint16(cpu.SP)&0x00FF)
 }
 
-func (r Resolve) Write(val uint16) {
+func (r *Resolve) Write(val uint16) {
 	if r.Mode == Acc {
 		r.Cpu.A = uint8(val & 0x00FF)
 	} else {
@@ -214,7 +214,7 @@ func (r Resolve) Write(val uint16) {
 	}
 }
 
-func (r Resolve) Read() uint16 {
+func (r *Resolve) Read() uint16 {
 	if r.Mode == Acc {
 		return uint16(r.Cpu.A)
 	} else {
@@ -222,15 +222,25 @@ func (r Resolve) Read() uint16 {
 	}
 }
 
-func (a AddressMode) Resolve(cpu *Cpu, space Space, opcode uint8) Resolve {
+func (a AddressMode) Resolve(resolve *Resolve, cpu *Cpu, space Space, opcode uint8) {
 	pc := cpu.PC
 	var r uint16 = 0
 	penalty := false
 	switch a {
 	case Imp:
-		return Resolve{cpu, space, a, r, penalty, opcode}
+		resolve.Cpu = cpu
+		resolve.Space = space
+		resolve.Mode = a
+		resolve.Address = r
+		resolve.Penalty = penalty
+		resolve.Opcode = opcode
 	case Acc:
-		return Resolve{cpu, space, a, r, penalty, opcode}
+		resolve.Cpu = cpu
+		resolve.Space = space
+		resolve.Mode = a
+		resolve.Address = r
+		resolve.Penalty = penalty
+		resolve.Opcode = opcode
 	case Imm:
 		r = pc
 		cpu.PC = pc + 1
@@ -299,5 +309,11 @@ func (a AddressMode) Resolve(cpu *Cpu, space Space, opcode uint8) Resolve {
 		r = uint16(space.Read(h1)) | (uint16(space.Read(h2)) << 8)
 		cpu.PC = pc + 1
 	}
-	return Resolve{cpu, space, a, r, penalty, opcode}
+
+	resolve.Cpu = cpu
+	resolve.Space = space
+	resolve.Mode = a
+	resolve.Address = r
+	resolve.Penalty = penalty
+	resolve.Opcode = opcode
 }

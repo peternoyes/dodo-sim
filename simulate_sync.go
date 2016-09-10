@@ -11,6 +11,8 @@ type SimulatorSync struct {
 	Bus     *Bus
 	Cpu     *Cpu
 	Gamepad *Gamepad
+	Resolve *Resolve
+	Fram    *Fram
 
 	Cycles              uint64
 	LastOp              uint8
@@ -33,7 +35,16 @@ func (s *SimulatorSync) PumpClock(input string) {
 		s.Cpu.PC++
 		s.Cpu.Status |= Constant
 		o := GetOperation(opcode)
-		c := o.Execute(s.Cpu, s.Bus, opcode)
+
+		c := o.Cycles
+
+		o.Mode.Resolve(s.Resolve, s.Cpu, s.Bus, opcode)
+		pop, rc := o.Handler(s.Resolve)
+		c += rc
+		if s.Resolve.Penalty && pop {
+			c += 1
+		}
+
 		s.Cycles += uint64(c)
 
 		if (s.LastOp == 0xA5 && opcode == 0xF0) || (s.LastOp == 0xF0 && opcode == 0xA5) {
@@ -64,9 +75,16 @@ func (s *SimulatorSync) PumpClock(input string) {
 	}
 }
 
+func (s *SimulatorSync) SwitchFram(game []byte) {
+	s.Fram.New(game)
+	s.Cpu.Reset(s.Bus)
+}
+
 func (s *SimulatorSync) SimulateSyncInit(firmware, game []byte) {
 	s.Bus = new(Bus)
 	s.Bus.New()
+
+	s.Resolve = new(Resolve)
 
 	ram := new(Ram)
 	s.Bus.Add(ram)
@@ -81,11 +99,11 @@ func (s *SimulatorSync) SimulateSyncInit(firmware, game []byte) {
 	s.Gamepad = new(Gamepad)
 	s.Gamepad.New()
 
-	fram := new(Fram)
-	fram.New(game)
+	s.Fram = new(Fram)
+	s.Fram.New(game)
 
 	via := new(Via)
-	via.New(s.Gamepad, fram)
+	via.New(s.Gamepad, s.Fram)
 	s.Bus.Add(via)
 
 	acia := new(Acia)
