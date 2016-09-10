@@ -40,6 +40,8 @@ func TestSimulator(t *testing.T) {
 		ram[i] = b
 	}
 
+	bus.BuildMap()
+
 	cpu := new(Cpu)
 	cpu.Reset(bus)
 
@@ -55,8 +57,6 @@ func TestSimulator(t *testing.T) {
 		cpu.Status |= Constant
 		o := GetOperation(opcode)
 		o.Execute(cpu, bus, opcode)
-
-		//fmt.Println(opcode)
 
 		if before == cpu.PC {
 			if cpu.PC != 13209 {

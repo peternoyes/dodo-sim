@@ -46,6 +46,8 @@ func Simulate(s *Simulator, firmware, game []byte) {
 	}
 	bus.Add(rom)
 
+	bus.BuildMap()
+
 	cpu := new(Cpu)
 	cpu.Reset(bus)
 

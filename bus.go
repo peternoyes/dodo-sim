@@ -1,7 +1,8 @@
 package dodosim
 
 type Bus struct {
-	Devices []Space
+	Devices  []Space
+	SpaceMap [0x10000]Space
 }
 
 func (bus *Bus) New() {
@@ -20,32 +21,23 @@ func (bus *Bus) Length() uint32 {
 	return 0x10000
 }
 
-func (bus *Bus) Read(addr uint16) uint8 {
+// Big optimization for GopherJS (only 64k total address space so map each and every address to the correct device)
+func (bus *Bus) BuildMap() {
 	for _, d := range bus.Devices {
 		s := d.Start()
 		l := d.Length()
 		e := uint32(s) + l
 
-		if addr >= s && uint32(addr) < e {
-			return d.Read(addr)
+		for i := uint32(s); i < e; i++ {
+			bus.SpaceMap[i] = d
 		}
 	}
+}
 
-	panic("Unmapped Address Space")
-	return 0
+func (bus *Bus) Read(addr uint16) uint8 {
+	return bus.SpaceMap[addr].Read(addr)
 }
 
 func (bus *Bus) Write(addr uint16, val uint8) {
-	for _, d := range bus.Devices {
-		s := d.Start()
-		l := d.Length()
-		e := uint32(s) + l
-
-		if addr >= s && uint32(addr) < e {
-			d.Write(addr, val)
-			return
-		}
-	}
-
-	panic("Unmapped Address Space")
+	bus.SpaceMap[addr].Write(addr, val)
 }

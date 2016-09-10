@@ -38,7 +38,11 @@ func (s *SimulatorSync) PumpClock(input string) {
 
 		c := o.Cycles
 
-		o.Mode.Resolve(s.Resolve, s.Cpu, s.Bus, opcode)
+		s.Resolve.Opcode = opcode
+		s.Resolve.Mode = o.Mode
+
+		s.Resolve.Resolve()
+
 		pop, rc := o.Handler(s.Resolve)
 		c += rc
 		if s.Resolve.Penalty && pop {
@@ -112,10 +116,16 @@ func (s *SimulatorSync) SimulateSyncInit(firmware, game []byte) {
 	for i, b := range firmware {
 		rom[i] = b
 	}
+
 	s.Bus.Add(rom)
+
+	s.Bus.BuildMap()
 
 	s.Cpu = new(Cpu)
 	s.Cpu.Reset(s.Bus)
+
+	s.Resolve.Cpu = s.Cpu
+	s.Resolve.Space = s.Bus
 
 	BuildTable()
 

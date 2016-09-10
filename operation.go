@@ -348,7 +348,12 @@ func (o *Operation) Execute(cpu *Cpu, space Space, opcode uint8) uint8 {
 	c := o.Cycles
 
 	r := new(Resolve)
-	o.Mode.Resolve(r, cpu, space, opcode)
+	r.Cpu = cpu
+	r.Space = space
+	r.Mode = o.Mode
+	r.Opcode = opcode
+
+	r.Resolve()
 
 	pop, rc := o.Handler(r)
 	c += rc

@@ -222,25 +222,17 @@ func (r *Resolve) Read() uint16 {
 	}
 }
 
-func (a AddressMode) Resolve(resolve *Resolve, cpu *Cpu, space Space, opcode uint8) {
+func (resolve *Resolve) Resolve() {
+	cpu := resolve.Cpu
+	space := resolve.Space
+
 	pc := cpu.PC
 	var r uint16 = 0
 	penalty := false
-	switch a {
+
+	switch resolve.Mode {
 	case Imp:
-		resolve.Cpu = cpu
-		resolve.Space = space
-		resolve.Mode = a
-		resolve.Address = r
-		resolve.Penalty = penalty
-		resolve.Opcode = opcode
 	case Acc:
-		resolve.Cpu = cpu
-		resolve.Space = space
-		resolve.Mode = a
-		resolve.Address = r
-		resolve.Penalty = penalty
-		resolve.Opcode = opcode
 	case Imm:
 		r = pc
 		cpu.PC = pc + 1
@@ -310,10 +302,6 @@ func (a AddressMode) Resolve(resolve *Resolve, cpu *Cpu, space Space, opcode uin
 		cpu.PC = pc + 1
 	}
 
-	resolve.Cpu = cpu
-	resolve.Space = space
-	resolve.Mode = a
 	resolve.Address = r
 	resolve.Penalty = penalty
-	resolve.Opcode = opcode
 }
