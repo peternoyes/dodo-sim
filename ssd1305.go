@@ -212,7 +212,7 @@ func (s *Ssd1305) Render() {
 	var x, y int
 	for y = 0; y < 8; y++ {
 		for x = 0; x < 128; x++ {
-			b := s.Buffer[x+y*132]
+			b := s.Buffer[(x+2)+y*132]
 			data[x+y*128] = b
 		}
 	}
