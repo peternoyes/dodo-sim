@@ -6,6 +6,7 @@ import (
 
 type SimulatorSync struct {
 	Renderer       Renderer
+	Speaker        Speaker
 	CyclesPerFrame func(cycles uint64)
 
 	Bus     *Bus
@@ -107,7 +108,7 @@ func (s *SimulatorSync) SimulateSyncInit(firmware, game []byte) {
 	s.Fram.New(game)
 
 	via := new(Via)
-	via.New(s.Gamepad, s.Fram)
+	via.New(s.Gamepad, s.Fram, s.Speaker)
 	s.Bus.Add(via)
 
 	acia := new(Acia)

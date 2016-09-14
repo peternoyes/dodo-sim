@@ -7,6 +7,7 @@ import (
 
 type Simulator struct {
 	Renderer         Renderer
+	Speaker          Speaker
 	Input            chan string
 	Ticker           *time.Ticker
 	IntervalCallback func() bool
@@ -35,7 +36,7 @@ func Simulate(s *Simulator, firmware, game []byte) {
 	fram.New(game)
 
 	via := new(Via)
-	via.New(gamepad, fram)
+	via.New(gamepad, fram, s.Speaker)
 	bus.Add(via)
 
 	acia := new(Acia)
