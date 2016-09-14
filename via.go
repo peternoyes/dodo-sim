@@ -113,11 +113,12 @@ func (v *Via) Write(addr uint16, val uint8) {
 }
 
 func (v *Via) processAudio() {
-	if v.Speaker != nil && v.getSRMode() == SR_OUT_T2_FREE && v.SR == 0x15 {
+	if v.Speaker != nil && v.getSRMode() == SR_OUT_T2_FREE && v.SR == 15 {
 		freq := 0
 		if v.T2CL != 0 {
 			freq = 1000000 / ((int(v.T2CL) + 2) * 8)
 		}
+
 		v.Speaker.SetFrequency(freq)
 	}
 }
