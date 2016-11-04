@@ -4,7 +4,7 @@ type Acia struct {
 }
 
 func (a *Acia) Start() uint16 {
-	return 0x5000
+	return 0x7F10
 }
 
 func (a *Acia) Length() uint32 {

@@ -37,7 +37,7 @@ func (s *Ssd1305) New(ram *Ram, output Renderer) {
 }
 
 func (s *Ssd1305) Start() uint16 {
-	return 0x4800
+	return 0x7F20
 }
 
 func (s *Ssd1305) Length() uint32 {
