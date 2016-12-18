@@ -1,13 +1,13 @@
 package dodosim
 
-type Ram [0x4000]uint8
+type Ram [0x7F00]uint8
 
 func (ram *Ram) Start() uint16 {
 	return 0x0
 }
 
 func (ram *Ram) Length() uint32 {
-	return 0x4000
+	return 0x7F00
 }
 
 func (ram *Ram) Read(addr uint16) uint8 {
