@@ -12,7 +12,8 @@ func (a *Acia) Length() uint32 {
 }
 
 func (a *Acia) Read(addr uint16) uint8 {
-	panic("Reading from Acia")
+	//panic("Reading from Acia")
+	return 0x0
 }
 
 func (a *Acia) Write(addr uint16, val uint8) {
