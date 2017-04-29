@@ -13,8 +13,10 @@ type Operation struct {
 }
 
 var table [256]*Operation
+var resolve *Resolve
 
 func BuildTable() {
+	resolve = new(Resolve)
 	// brk,  ora,  nop,  slo,  nop,  ora,  asl,  slo,  php,  ora,  asl,  nop,  nop,  ora,  asl,
 	// imp, indx,  imp, indx,   zp,   zp,   zp,   zp,  imp,  imm,  acc,  imm, abso, abso, abso, abso
 	// 7,    6,    2,    8,    3,    3,    5,    5,    3,    2,    2,    2,    4,    4,    6,    6
@@ -344,20 +346,21 @@ func GetFunctionName(i interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }
 
+var r *Resolve
+
 func (o *Operation) Execute(cpu *Cpu, space Space, opcode uint8) uint8 {
 	c := o.Cycles
 
-	r := new(Resolve)
-	r.Cpu = cpu
-	r.Space = space
-	r.Mode = o.Mode
-	r.Opcode = opcode
+	resolve.Cpu = cpu
+	resolve.Space = space
+	resolve.Mode = o.Mode
+	resolve.Opcode = opcode
 
-	r.Resolve()
+	resolve.Resolve()
 
-	pop, rc := o.Handler(r)
+	pop, rc := o.Handler(resolve)
 	c += rc
-	if r.Penalty && pop {
+	if resolve.Penalty && pop {
 		c += 1
 	}
 
