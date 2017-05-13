@@ -55,8 +55,7 @@ func TestSimulator(t *testing.T) {
 
 		cpu.PC++
 		cpu.Status |= Constant
-		o := GetOperation(opcode)
-		o.Execute(cpu, bus, opcode)
+		Execute(cpu, bus, opcode)
 
 		if before == cpu.PC {
 			if cpu.PC != 13209 {

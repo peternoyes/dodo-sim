@@ -7,9 +7,9 @@ import (
 )
 
 type Operation struct {
-	Handler func(r *Resolve) (bool, uint8)
+	Handler func(r *Resolve) (bool, int)
 	Mode    AddressMode
-	Cycles  uint8
+	Cycles  int
 }
 
 var table [256]*Operation
@@ -346,9 +346,8 @@ func GetFunctionName(i interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }
 
-var r *Resolve
-
-func (o *Operation) Execute(cpu *Cpu, space Space, opcode uint8) uint8 {
+func Execute(cpu *Cpu, space Space, opcode uint8) int {
+	o := table[opcode]
 	c := o.Cycles
 
 	resolve.Cpu = cpu
@@ -367,10 +366,10 @@ func (o *Operation) Execute(cpu *Cpu, space Space, opcode uint8) uint8 {
 	return c
 }
 
-func Adc(r *Resolve) (bool, uint8) {
+func Adc(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	val := r.Read()
-	var c uint8 = 0
+	var c int = 0
 	var res uint16
 
 	res = uint16(cpu.A) + val + uint16(cpu.Status&Carry)
@@ -407,7 +406,7 @@ func Adc(r *Resolve) (bool, uint8) {
 	return true, c // Possible penalty
 }
 
-func And(r *Resolve) (bool, uint8) {
+func And(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	val := r.Read()
 	var res uint16
@@ -421,7 +420,7 @@ func And(r *Resolve) (bool, uint8) {
 	return true, 0
 }
 
-func Asl(r *Resolve) (bool, uint8) {
+func Asl(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	var res uint16
 	res = r.Read() << 1
@@ -435,9 +434,9 @@ func Asl(r *Resolve) (bool, uint8) {
 	return false, 0 // No potential for penalty
 }
 
-func Bcc(r *Resolve) (bool, uint8) {
+func Bcc(r *Resolve) (bool, int) {
 	cpu := r.Cpu
-	var c uint8 = 0
+	var c int = 0
 	if cpu.Status&Carry == 0 {
 		oldpc := cpu.PC
 		cpu.PC += r.Address
@@ -451,9 +450,9 @@ func Bcc(r *Resolve) (bool, uint8) {
 	return false, c
 }
 
-func Bcs(r *Resolve) (bool, uint8) {
+func Bcs(r *Resolve) (bool, int) {
 	cpu := r.Cpu
-	var c uint8 = 0
+	var c int = 0
 	if cpu.Status&Carry == Carry {
 		oldpc := cpu.PC
 		cpu.PC += r.Address
@@ -467,9 +466,9 @@ func Bcs(r *Resolve) (bool, uint8) {
 	return false, c
 }
 
-func Beq(r *Resolve) (bool, uint8) {
+func Beq(r *Resolve) (bool, int) {
 	cpu := r.Cpu
-	var c uint8 = 0
+	var c int = 0
 	if cpu.Status&Zero == Zero {
 		oldpc := cpu.PC
 		cpu.PC += r.Address
@@ -482,7 +481,7 @@ func Beq(r *Resolve) (bool, uint8) {
 	return false, c
 }
 
-func Bit(r *Resolve) (bool, uint8) {
+func Bit(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	val := r.Read()
 	var res uint16
@@ -493,9 +492,9 @@ func Bit(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Bmi(r *Resolve) (bool, uint8) {
+func Bmi(r *Resolve) (bool, int) {
 	cpu := r.Cpu
-	var c uint8 = 0
+	var c int = 0
 	if cpu.Status&Sign == Sign {
 		oldpc := cpu.PC
 		cpu.PC += r.Address
@@ -508,9 +507,9 @@ func Bmi(r *Resolve) (bool, uint8) {
 	return false, c
 }
 
-func Bne(r *Resolve) (bool, uint8) {
+func Bne(r *Resolve) (bool, int) {
 	cpu := r.Cpu
-	var c uint8 = 0
+	var c int = 0
 	if cpu.Status&Zero == 0 {
 		oldpc := cpu.PC
 		cpu.PC += r.Address
@@ -523,9 +522,9 @@ func Bne(r *Resolve) (bool, uint8) {
 	return false, c
 }
 
-func Bpl(r *Resolve) (bool, uint8) {
+func Bpl(r *Resolve) (bool, int) {
 	cpu := r.Cpu
-	var c uint8 = 0
+	var c int = 0
 	if cpu.Status&Sign == 0 {
 		oldpc := cpu.PC
 		cpu.PC += r.Address
@@ -538,7 +537,7 @@ func Bpl(r *Resolve) (bool, uint8) {
 	return false, c
 }
 
-func Brk(r *Resolve) (bool, uint8) {
+func Brk(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.PC++
 	r.Push16(cpu.PC)
@@ -548,9 +547,9 @@ func Brk(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Bvc(r *Resolve) (bool, uint8) {
+func Bvc(r *Resolve) (bool, int) {
 	cpu := r.Cpu
-	var c uint8 = 0
+	var c int = 0
 	if cpu.Status&Overflow == 0 {
 		oldpc := cpu.PC
 		cpu.PC += r.Address
@@ -563,9 +562,9 @@ func Bvc(r *Resolve) (bool, uint8) {
 	return false, c
 }
 
-func Bvs(r *Resolve) (bool, uint8) {
+func Bvs(r *Resolve) (bool, int) {
 	cpu := r.Cpu
-	var c uint8 = 0
+	var c int = 0
 	if cpu.Status&Overflow == Overflow {
 		oldpc := cpu.PC
 		cpu.PC += r.Address
@@ -578,27 +577,27 @@ func Bvs(r *Resolve) (bool, uint8) {
 	return false, c
 }
 
-func Clc(r *Resolve) (bool, uint8) {
+func Clc(r *Resolve) (bool, int) {
 	r.Cpu.ClearCarry()
 	return false, 0
 }
 
-func Cld(r *Resolve) (bool, uint8) {
+func Cld(r *Resolve) (bool, int) {
 	r.Cpu.ClearDecimal()
 	return false, 0
 }
 
-func Cli(r *Resolve) (bool, uint8) {
+func Cli(r *Resolve) (bool, int) {
 	r.Cpu.ClearInterrupt()
 	return false, 0
 }
 
-func Clv(r *Resolve) (bool, uint8) {
+func Clv(r *Resolve) (bool, int) {
 	r.Cpu.ClearOverflow()
 	return false, 0
 }
 
-func Cmp(r *Resolve) (bool, uint8) {
+func Cmp(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	val := r.Read()
 
@@ -609,13 +608,14 @@ func Cmp(r *Resolve) (bool, uint8) {
 
 	if cpu.A >= uint8(val&0x00FF) {
 		cpu.SetCarry()
+
+		if cpu.A == uint8(val&0x00FF) {
+			cpu.SetZero()
+		} else {
+			cpu.ClearZero()
+		}
 	} else {
 		cpu.ClearCarry()
-	}
-
-	if cpu.A == uint8(val&0x00FF) {
-		cpu.SetZero()
-	} else {
 		cpu.ClearZero()
 	}
 
@@ -624,7 +624,7 @@ func Cmp(r *Resolve) (bool, uint8) {
 	return true, 0
 }
 
-func Cpx(r *Resolve) (bool, uint8) {
+func Cpx(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	val := r.Read()
 	var res uint16
@@ -632,13 +632,15 @@ func Cpx(r *Resolve) (bool, uint8) {
 
 	if cpu.X >= uint8(val&0x00FF) {
 		cpu.SetCarry()
+
+		if cpu.X == uint8(val&0x00FF) {
+			cpu.SetZero()
+		} else {
+			cpu.ClearZero()
+		}
+
 	} else {
 		cpu.ClearCarry()
-	}
-
-	if cpu.X == uint8(val&0x00FF) {
-		cpu.SetZero()
-	} else {
 		cpu.ClearZero()
 	}
 
@@ -647,7 +649,7 @@ func Cpx(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Cpy(r *Resolve) (bool, uint8) {
+func Cpy(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	val := r.Read()
 	var res uint16
@@ -655,13 +657,14 @@ func Cpy(r *Resolve) (bool, uint8) {
 
 	if cpu.Y >= uint8(val&0x00FF) {
 		cpu.SetCarry()
+
+		if cpu.Y == uint8(val&0x00FF) {
+			cpu.SetZero()
+		} else {
+			cpu.ClearZero()
+		}
 	} else {
 		cpu.ClearCarry()
-	}
-
-	if cpu.Y == uint8(val&0x00FF) {
-		cpu.SetZero()
-	} else {
 		cpu.ClearZero()
 	}
 
@@ -670,7 +673,7 @@ func Cpy(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Dec(r *Resolve) (bool, uint8) {
+func Dec(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	var res uint16
 	res = r.Read() - 1
@@ -680,7 +683,7 @@ func Dec(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Dex(r *Resolve) (bool, uint8) {
+func Dex(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.X -= 1
 	cpu.ZeroCalc8(cpu.X)
@@ -688,7 +691,7 @@ func Dex(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Dey(r *Resolve) (bool, uint8) {
+func Dey(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.Y -= 1
 	cpu.ZeroCalc8(cpu.Y)
@@ -696,7 +699,7 @@ func Dey(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Eor(r *Resolve) (bool, uint8) {
+func Eor(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	var res uint16
 	res = uint16(cpu.A) ^ r.Read()
@@ -706,7 +709,7 @@ func Eor(r *Resolve) (bool, uint8) {
 	return true, 0
 }
 
-func Inc(r *Resolve) (bool, uint8) {
+func Inc(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	var res uint16
 	res = r.Read() + 1
@@ -716,7 +719,7 @@ func Inc(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Inx(r *Resolve) (bool, uint8) {
+func Inx(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.X++
 	cpu.ZeroCalc(uint16(cpu.X))
@@ -724,7 +727,7 @@ func Inx(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Iny(r *Resolve) (bool, uint8) {
+func Iny(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.Y++
 	cpu.ZeroCalc(uint16(cpu.Y))
@@ -732,19 +735,19 @@ func Iny(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Jmp(r *Resolve) (bool, uint8) {
+func Jmp(r *Resolve) (bool, int) {
 	r.Cpu.PC = r.Address
 	return false, 0
 }
 
-func Jsr(r *Resolve) (bool, uint8) {
+func Jsr(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	r.Push16(cpu.PC - 1)
 	cpu.PC = r.Address
 	return false, 0
 }
 
-func Lda(r *Resolve) (bool, uint8) {
+func Lda(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	var res uint16
 	res = r.Read() & 0x00FF
@@ -754,7 +757,7 @@ func Lda(r *Resolve) (bool, uint8) {
 	return true, 0
 }
 
-func Ldx(r *Resolve) (bool, uint8) {
+func Ldx(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	var res uint16
 	res = r.Read() & 0x00FF
@@ -764,7 +767,7 @@ func Ldx(r *Resolve) (bool, uint8) {
 	return true, 0
 }
 
-func Ldy(r *Resolve) (bool, uint8) {
+func Ldy(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	var res uint16
 	res = r.Read() & 0x00FF
@@ -774,7 +777,7 @@ func Ldy(r *Resolve) (bool, uint8) {
 	return true, 0
 }
 
-func Lsr(r *Resolve) (bool, uint8) {
+func Lsr(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	val := r.Read()
 	var res uint16
@@ -793,7 +796,7 @@ func Lsr(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Nop(r *Resolve) (bool, uint8) {
+func Nop(r *Resolve) (bool, int) {
 	//fmt.Println("NOP: ", r.Opcode)
 
 	switch r.Opcode {
@@ -814,7 +817,7 @@ func Nop(r *Resolve) (bool, uint8) {
 	}
 }
 
-func Ora(r *Resolve) (bool, uint8) {
+func Ora(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	val := r.Read()
 	var res uint16
@@ -825,18 +828,18 @@ func Ora(r *Resolve) (bool, uint8) {
 	return true, 0
 }
 
-func Pha(r *Resolve) (bool, uint8) {
+func Pha(r *Resolve) (bool, int) {
 	r.Push8(r.Cpu.A)
 	return false, 0
 }
 
-func Php(r *Resolve) (bool, uint8) {
+func Php(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	r.Push8(uint8(cpu.Status | Break))
 	return false, 0
 }
 
-func Pla(r *Resolve) (bool, uint8) {
+func Pla(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.A = r.Pull8()
 	cpu.ZeroCalc(uint16(cpu.A))
@@ -844,13 +847,13 @@ func Pla(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Plp(r *Resolve) (bool, uint8) {
+func Plp(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.Status = Status(r.Pull8()) | Constant
 	return false, 0
 }
 
-func Rol(r *Resolve) (bool, uint8) {
+func Rol(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	val := r.Read()
 	var res uint16
@@ -865,7 +868,7 @@ func Rol(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Ror(r *Resolve) (bool, uint8) {
+func Ror(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	val := r.Read()
 	var res uint16
@@ -883,20 +886,20 @@ func Ror(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Rti(r *Resolve) (bool, uint8) {
+func Rti(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.Status = Status(r.Pull8())
 	cpu.PC = r.Pull16()
 	return false, 0
 }
 
-func Rts(r *Resolve) (bool, uint8) {
+func Rts(r *Resolve) (bool, int) {
 	val := r.Pull16()
 	r.Cpu.PC = val + 1
 	return false, 0
 }
 
-func Sbc(r *Resolve) (bool, uint8) {
+func Sbc(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	val := r.Read()
 	carry := uint8(1)
@@ -905,7 +908,7 @@ func Sbc(r *Resolve) (bool, uint8) {
 	}
 
 	var res uint16
-	var c uint8 = 0
+	var c int = 0
 	if cpu.Status&Decimal != 0 {
 		low := (cpu.A & 0x0F) - (uint8(val) & 0x0F) - carry
 		if (low & 0x10) != 0 {
@@ -962,37 +965,37 @@ func Sbc(r *Resolve) (bool, uint8) {
 	return true, c // Possible penalty
 }
 
-func Sec(r *Resolve) (bool, uint8) {
+func Sec(r *Resolve) (bool, int) {
 	r.Cpu.SetCarry()
 	return false, 0
 }
 
-func Sed(r *Resolve) (bool, uint8) {
+func Sed(r *Resolve) (bool, int) {
 	r.Cpu.SetDecimal()
 	return false, 0
 }
 
-func Sei(r *Resolve) (bool, uint8) {
+func Sei(r *Resolve) (bool, int) {
 	r.Cpu.SetInterrupt()
 	return false, 0
 }
 
-func Sta(r *Resolve) (bool, uint8) {
+func Sta(r *Resolve) (bool, int) {
 	r.Write(uint16(r.Cpu.A))
 	return false, 0
 }
 
-func Stx(r *Resolve) (bool, uint8) {
+func Stx(r *Resolve) (bool, int) {
 	r.Write(uint16(r.Cpu.X))
 	return false, 0
 }
 
-func Sty(r *Resolve) (bool, uint8) {
+func Sty(r *Resolve) (bool, int) {
 	r.Write(uint16(r.Cpu.Y))
 	return false, 0
 }
 
-func Tax(r *Resolve) (bool, uint8) {
+func Tax(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.X = cpu.A
 	cpu.ZeroCalc(uint16(cpu.X))
@@ -1000,7 +1003,7 @@ func Tax(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Tay(r *Resolve) (bool, uint8) {
+func Tay(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.Y = cpu.A
 	cpu.ZeroCalc(uint16(cpu.Y))
@@ -1008,7 +1011,7 @@ func Tay(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Tsx(r *Resolve) (bool, uint8) {
+func Tsx(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.X = cpu.SP
 	cpu.ZeroCalc(uint16(cpu.X))
@@ -1016,7 +1019,7 @@ func Tsx(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Txa(r *Resolve) (bool, uint8) {
+func Txa(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.A = cpu.X
 	cpu.ZeroCalc(uint16(cpu.A))
@@ -1024,13 +1027,13 @@ func Txa(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Txs(r *Resolve) (bool, uint8) {
+func Txs(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.SP = cpu.X
 	return false, 0
 }
 
-func Tya(r *Resolve) (bool, uint8) {
+func Tya(r *Resolve) (bool, int) {
 	cpu := r.Cpu
 	cpu.A = cpu.Y
 	cpu.ZeroCalc(uint16(cpu.A))
@@ -1038,34 +1041,34 @@ func Tya(r *Resolve) (bool, uint8) {
 	return false, 0
 }
 
-func Lax(r *Resolve) (bool, uint8) {
+func Lax(r *Resolve) (bool, int) {
 	panic("Lax Not Implemented")
 }
 
-func Sax(r *Resolve) (bool, uint8) {
+func Sax(r *Resolve) (bool, int) {
 	panic("Sax Not Implemented")
 }
 
-func Dcp(r *Resolve) (bool, uint8) {
+func Dcp(r *Resolve) (bool, int) {
 	panic("Dcp Not Implemented")
 }
 
-func Isb(r *Resolve) (bool, uint8) {
+func Isb(r *Resolve) (bool, int) {
 	panic("Isb Not Implemented")
 }
 
-func Slo(r *Resolve) (bool, uint8) {
+func Slo(r *Resolve) (bool, int) {
 	panic("Slo Not Implemented")
 }
 
-func Rla(r *Resolve) (bool, uint8) {
+func Rla(r *Resolve) (bool, int) {
 	panic("Rla Not Implemented")
 }
 
-func Sre(r *Resolve) (bool, uint8) {
+func Sre(r *Resolve) (bool, int) {
 	panic("Sre Not Implemented")
 }
 
-func Rra(r *Resolve) (bool, uint8) {
+func Rra(r *Resolve) (bool, int) {
 	panic("Rra Not Implemented")
 }

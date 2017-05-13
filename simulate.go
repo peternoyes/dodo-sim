@@ -56,13 +56,7 @@ func Simulate(s *Simulator, firmware, game []byte) {
 
 	var cycles uint64 = 0
 
-	syncer := make(chan int)
-	go func(syncer chan int) {
-		for {
-			time.Sleep(50 * time.Millisecond) // 50 ms
-			syncer <- 50
-		}
-	}(syncer)
+	syncer := time.NewTicker(50 * time.Millisecond).C
 
 	var lastOp uint8 = 0
 	var waitTester int = 0
@@ -75,8 +69,7 @@ L:
 
 		cpu.PC++
 		cpu.Status |= Constant
-		o := GetOperation(opcode)
-		c := o.Execute(cpu, bus, opcode)
+		c := Execute(cpu, bus, opcode)
 		cycles += uint64(c)
 
 		if (lastOp == 0xA5 && opcode == 0xF0) || (lastOp == 0xF0 && opcode == 0xA5) {
