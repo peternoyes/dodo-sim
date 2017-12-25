@@ -13,6 +13,7 @@ type SimulatorSync struct {
 	Cpu     *Cpu
 	Gamepad *Gamepad
 	Resolve *Resolve
+	Rom     *Rom
 	Fram    *Fram
 
 	Cycles              uint64
@@ -80,7 +81,11 @@ func (s *SimulatorSync) PumpClock(input string) {
 	}
 }
 
-func (s *SimulatorSync) SwitchFram(game []byte) {
+func (s *SimulatorSync) SwitchFram(firmware, game []byte) {
+	for i, b := range firmware {
+		s.Rom[i] = b
+	}
+
 	s.Fram.New(game)
 	s.Cpu.Reset(s.Bus)
 }
@@ -94,7 +99,7 @@ func (s *SimulatorSync) SimulateSyncInit(firmware, game []byte) {
 	ram := new(Ram)
 	s.Bus.Add(ram)
 
-	rom := new(Rom)
+	s.Rom = new(Rom)
 
 	ssd1305 := new(Ssd1305)
 	ssd1305.New(ram, s.Renderer)
@@ -115,10 +120,10 @@ func (s *SimulatorSync) SimulateSyncInit(firmware, game []byte) {
 	s.Bus.Add(acia)
 
 	for i, b := range firmware {
-		rom[i] = b
+		s.Rom[i] = b
 	}
 
-	s.Bus.Add(rom)
+	s.Bus.Add(s.Rom)
 
 	s.Bus.BuildMap()
 
