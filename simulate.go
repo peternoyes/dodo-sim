@@ -33,7 +33,7 @@ func Simulate(s *Simulator, firmware, game []byte) {
 	gamepad.New()
 
 	fram := new(Fram)
-	fram.New(game)
+	fram.New(game, nil)
 
 	via := new(Via)
 	via.New(gamepad, fram, s.Speaker)

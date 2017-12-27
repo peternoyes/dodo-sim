@@ -86,11 +86,11 @@ func (s *SimulatorSync) SwitchFram(firmware, game []byte) {
 		s.Rom[i] = b
 	}
 
-	s.Fram.New(game)
+	s.Fram.New(game, s.Fram.Flusher)
 	s.Cpu.Reset(s.Bus)
 }
 
-func (s *SimulatorSync) SimulateSyncInit(firmware, game []byte) {
+func (s *SimulatorSync) SimulateSyncInit(firmware, game []byte, flusher func(f *Fram)) {
 	s.Bus = new(Bus)
 	s.Bus.New()
 
@@ -110,7 +110,7 @@ func (s *SimulatorSync) SimulateSyncInit(firmware, game []byte) {
 	s.Gamepad.New()
 
 	s.Fram = new(Fram)
-	s.Fram.New(game)
+	s.Fram.New(game, flusher)
 
 	via := new(Via)
 	via.New(s.Gamepad, s.Fram, s.Speaker)

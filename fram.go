@@ -45,9 +45,10 @@ type Fram struct {
 	Address      uint16
 	State        int
 	WriteEnable  bool
+	Flusher      func(f *Fram)
 }
 
-func (f *Fram) New(fram []byte) {
+func (f *Fram) New(fram []byte, flusher func(f *Fram)) {
 	f.Clock = false
 	f.Off = true
 	f.WaitingMosi = false
@@ -59,6 +60,7 @@ func (f *Fram) New(fram []byte) {
 	f.Address = 0
 	f.State = None
 	f.WriteEnable = false
+	f.Flusher = flusher
 
 	for i, v := range fram {
 		f.Data[i] = v
@@ -159,6 +161,10 @@ func (f *Fram) processByte(val uint8) {
 			f.WriteEnable = true
 		case WRDI:
 			f.WriteEnable = false
+
+			if f.Flusher != nil {
+				f.Flusher(f)
+			}
 		case READ:
 			f.State = ReadAddr1
 		case WRITE:
